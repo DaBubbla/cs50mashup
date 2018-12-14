@@ -1,6 +1,8 @@
 import os
 import re
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, redirect, render_template, request
+from werkzeug.exceptions import default_exceptions
+
 
 from cs50 import SQL
 from helpers import lookup
@@ -31,13 +33,28 @@ def index():
 def articles():
     """Look up articles for geo"""
 
+    # Locate geo info and call lookup()
+
+    geo = request.values.get("geo")
+    if not geo:
+        raise RuntimeError("Geo not set.")
+    articles = lookup(geo)
+
+    # Return articles as JSON object
     # TODO
-    return jsonify([])
+    return jsonify([ articles[0], articles[1], articles[2], articles[3] ])
 
 
 @app.route("/search")
 def search():
     """Search for places that match query"""
+    # Waiting for search values / args
+    q = request.values.get("q")
+    if not q:
+        raise RuntimeError("There is no 'q'.")
+
+    # Verify that user's query matches place in places either by postal code, name, or state
+    rows = db.execute("SELECT * FROM places WHERE postal_code LIKE :q OR place_name :q OR admin_name1 :q LIKE :q", q=q)
 
     # TODO
     return jsonify([])

@@ -64,6 +64,20 @@ $(document).ready(function() {
 function addMarker(place)
 {
     // TODO
+    // Latitude and Longitude are necessary to place markers...
+    var myLatLng = new google.maps.LatLng(place['latitude'], place['longitude']);
+
+
+    // Adds a marker to the map and push to the array (markers[])
+    let marker = new google.maps.Marker({
+       position: myLatLng,
+       map: map,
+       title: place['place_name'],
+       label: place['place_name'],
+    // icon: default icon?
+    });
+
+    markers.push(marker);
 }
 
 
@@ -88,18 +102,18 @@ function configure()
 
     // Configure typeahead
     $("#q").typeahead({
-        highlight: false,
-        minLength: 1
+        highlight: false,//Added to the element that wraps highlighted text. Defaults to tt-highlight
+        minLength: 1 //The minimum character length needed before suggestions start getting rendered. Defaults to 1.
     },
     {
         display: function(suggestion) { return null; },
         limit: 10,
-        source: search,
+        source: search,// is the function that the plugin will call as soon as the user starts typing so that the function can respond with an array of search results based on the user’s input
         templates: {
             suggestion: Handlebars.compile(
                 "<div>" +
-                "TODO" +
-                "</div>"
+               // {{ place_name }} + {{ admin_name1 }} + {{ postal_code }}
+               + "</div>"
             )
         }
     });
@@ -122,8 +136,8 @@ function configure()
     // Re-enable ctrl- and right-clicking (and thus Inspect Element) on Google Map
     // https://chrome.google.com/webstore/detail/allow-right-click/hompjdfbfmmmgflfjdlnkohcplmboaeo?hl=en
     document.addEventListener("contextmenu", function(event) {
-        event.returnValue = true; 
-        event.stopPropagation && event.stopPropagation(); 
+        event.returnValue = true;
+        event.stopPropagation && event.stopPropagation();
         event.cancelBubble && event.cancelBubble();
     }, true);
 
@@ -139,6 +153,7 @@ function configure()
 function removeMarkers()
 {
     // TODO
+    markers.setMap(null);
 }
 
 
@@ -150,7 +165,7 @@ function search(query, syncResults, asyncResults)
         q: query
     };
     $.getJSON("/search", parameters, function(data, textStatus, jqXHR) {
-     
+
         // Call typeahead's callback with search results (i.e., places)
         asyncResults(data);
     });
@@ -184,7 +199,7 @@ function showInfo(marker, content)
 
 
 // Update UI's markers
-function update() 
+function update()
 {
     // Get map's bounds
     let bounds = map.getBounds();
