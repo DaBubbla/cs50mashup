@@ -38,7 +38,7 @@ $(document).ready(function() {
     // Options for map
     // https://developers.google.com/maps/documentation/javascript/reference#MapOptions
     let options = {
-        center: {lat: 37.4236, lng: -122.1619}, // Stanford, California
+        center: {lat: 42.3770, lng: -71.1256}, // Cambridge
         disableDefaultUI: true,
         mapTypeId: google.maps.MapTypeId.ROADMAP,
         maxZoom: 14,
@@ -64,19 +64,37 @@ $(document).ready(function() {
 function addMarker(place)
 {
     // TODO
-    // Latitude and Longitude are necessary to place markers...
-    var myLatLng = new google.maps.LatLng(place['latitude'], place['longitude']);
-
-
     // Adds a marker to the map and push to the array (markers[])
     let marker = new google.maps.Marker({
-       position: myLatLng,
-       map: map,
-       title: place['place_name'],
-       label: place['place_name'],
-    // icon: default icon?
+        position: {lat: place.latitude, lng: place.longitude},
+        label: place.place_name + ", " + place.admin_name1,
+        map: map
     });
 
+    // Load articles for place and wait for clicks - ajaz1.html
+    let params = {
+        geo: place.postal_code
+    };
+    $.getJSON("/articles", params, function(articles) {
+        // Build list (<ul>) of links to articles
+        var innards = '<ul>';
+
+
+            // for (var i = 0; i < articles.length; i++)
+            articles.forEach(function (place){
+                innards += '<li><a href="' + place.link + '" target=_blank">' + place.title + '</a></li>';
+            });
+
+        innards += '</ul>';
+
+    // Listens for clicks on marker
+    google.maps.event.addListener(marker, 'click', function() {
+        showInfo(marker, innards);
+    });
+
+    });
+
+    // Push marker
     markers.push(marker);
 }
 
@@ -103,7 +121,7 @@ function configure()
     // Configure typeahead
     $("#q").typeahead({
         highlight: false,//Added to the element that wraps highlighted text. Defaults to tt-highlight
-        minLength: 1 //The minimum character length needed before suggestions start getting rendered. Defaults to 1.
+        minLength: 3 //The minimum character length needed before suggestions start getting rendered. Defaults to 1.
     },
     {
         display: function(suggestion) { return null; },
@@ -112,7 +130,7 @@ function configure()
         templates: {
             suggestion: Handlebars.compile(
                 "<div>" +
-               // {{ place_name }} + {{ admin_name1 }} + {{ postal_code }}
+                     "{{ place_name }}, {{ admin_name1 }}, {{ postal_code }}"
                + "</div>"
             )
         }
@@ -152,8 +170,10 @@ function configure()
 // Remove markers from map
 function removeMarkers()
 {
-    // TODO
-    markers.setMap(null);
+    // TODO forEach() could also work?
+    for (var i = 0, n = markers.length; i < n; i++){
+        markers[i].setMap(null);
+    }
 }
 
 
@@ -223,4 +243,4 @@ function update()
            addMarker(data[i]);
        }
     });
-};
+}

@@ -2,7 +2,7 @@ import os
 import re
 from flask import Flask, jsonify, redirect, render_template, request
 from werkzeug.exceptions import default_exceptions
-
+from tokenize import tokenize
 
 from cs50 import SQL
 from helpers import lookup
@@ -48,16 +48,31 @@ def articles():
 @app.route("/search")
 def search():
     """Search for places that match query"""
+     # TODO
     # Waiting for search values / args
-    q = request.values.get("q")
+    q = request.args.get("q") + "%"
+
     if not q:
         raise RuntimeError("There is no 'q'.")
 
-    # Verify that user's query matches place in places either by postal code, name, or state
-    rows = db.execute("SELECT * FROM places WHERE postal_code LIKE :q OR place_name :q OR admin_name1 :q LIKE :q", q=q)
 
-    # TODO
-    return jsonify([])
+    # # Verify that user's query matches place in places either by postal code, name, or state
+    """Can only retreive one piece at a time ie city is ok, state is ok - city + state = no go"""
+    place = db.execute("SELECT \
+                        * \
+                        FROM places \
+                        WHERE places.place_name LIKE :q OR places.postal_code LIKE :q OR places.admin_name1 LIKE :q OR places.admin_code1 \
+                        GROUP BY place_name", q=q)
+
+
+    if not place:
+        raise RuntimeError("Something went wrong with 'place'!")
+
+
+    if len(place) > 10:
+        return jsonify([ place[0], place[1], place[2], place[3], place[4], place[5], place[6], place[7], place[8], place[9] ])
+    else:
+        return jsonify(place)
 
 
 @app.route("/update")
